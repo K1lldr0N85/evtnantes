@@ -52,7 +52,7 @@
 
     	box-shadow: 0 1px 1px #ccc;
     	border-radius: 2px;
-    	width: 700px;
+    	width: 900px;
     	padding: 10px;
         margin: auto;
     	/*margin: 45px auto 25px;*/
@@ -139,25 +139,25 @@
 
     ul.grid{
     	list-style: none;
-    	width: 700px;
+    	width: 900px;
     	margin: 0 auto;
     	/*text-align: left;*/
     }
 
     ul.grid li{
-        width:338px;
-    	height:350px;
+        width:420px;
+    	height:500px;
     	padding: 2px;
         margin-bottom: 10px;
-        margin-left: 5px;
+        margin-left: 25px;
     	float:left;
         background-color: #ddd; 
             }
 
     ul.grid li img{
         padding-bottom: 20px;
-    	width:250px;
-    	height:250px;
+    	width:300px;
+    	height:350px;
         margin: auto;
     	object-fit: cover;
     	display:block;
@@ -185,7 +185,7 @@
 
 		<!-- These two buttons switch the layout variable,
 			 which causes the correct UL to be shown. -->
-
+            <input type="text" v-model="searchString" placeholder="Enter your search terms" />
 		<a class="list-icon" v-bind:class="{ 'active': layout == 'list'}" v-on:click="layout = 'list'"></a>
 		<a class="grid-icon" v-bind:class="{ 'active': layout == 'grid'}" v-on:click="layout = 'grid'"></a>
 	</div>
@@ -194,7 +194,7 @@
 
 	<ul v-if="layout == 'grid'" class="grid">
 		<!-- A view with big photos and no text -->
-		<li v-for="a in commits">
+		<li v-for="a in filteredArticles">
                 <div id="divH4">
                     <h1>{{a.fields.nom}}</h1>
                 </div>
@@ -206,7 +206,7 @@
 
 	<ul v-if="layout == 'list'" class="list">
 		<!-- A compact view smaller photos and titles -->
-		<li v-for="a in commits">
+		<li v-for="a in filteredArticles">
                
                             <p>{{a.fields.nom}}</p> 
                           
@@ -230,32 +230,56 @@
 var demo = new Vue({
     el: '#main',
     data: {
+        searchString: "",
         // The layout mode, possible values are "grid" or "list".
         layout: 'grid',
         commits: null,
     },
-        created: function () {
-		    this.fetchData()
-		  },
+    created: function () {
+		this.fetchData()
+	},
        
-        methods: {
-            fetchData: function () {
+    methods: {
+        fetchData: function () {
   
-              const options = {
-              method: 'get',
-              url: apiURL,
-              }     
-              // send the request
-              axios(options)
-              .then((response) => {
-              this.commits = response.data.records
-              console.log(response.data.records)
-          
-              });
-            }
+            const options = {
+                method: 'get',
+                url: apiURL,
+            }     
+            // send the request
+            axios(options)
+            .then(response => {
+                 this.commits = response.data.records.filter((event, index) => {
+                    const foundIndex = response.data.records.findIndex(e => e.fields.nom === event.fields.nom)
+                    return foundIndex === index
+                })
+            })
+        }
         
 
+    },
+    computed: {
+        // A computed property that holds only those articles that match the searchString.
+        filteredArticles: function () {
+            var articles_array = this.commits,
+                searchString = this.searchString;
+
+            if(!searchString){
+                return articles_array;
+            }
+
+            searchString = searchString.trim().toLowerCase();
+
+            articles_array = articles_array.filter(function(item){
+                if(item.fields.nom.toLowerCase().indexOf(searchString) !== -1){
+                    return item;
+                }
+            })
+
+            // Return an array with the filtered data.
+            return articles_array;;
         }
+    }
 });
 	
 </script>
